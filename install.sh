@@ -1,13 +1,21 @@
 #!/bin/bash
 
+PSQLPASS=vagrantpostgres
+
 #
 # trytond.conf
 #
 
 read -r -d '' CONF << EOM
 [database]
-uri = postgresql://tryton@localhost
+uri = postgresql://trytond:$PSQLPASS@localhost
 path = /usr/local/bin/trytond
+
+[web]
+listen = *:8080
+
+[jsonrpc]
+listen = 0.0.0.0:8000
 EOM
 
 #
@@ -66,26 +74,30 @@ WantedBy=multi-user.target
 EOM
 
 #
+# Ubuntu packages
+#
+
+PACKAGES="python python-dev python-pip libxml2-dev\
+   libxslt1-dev postgresql postgresql-server-dev-9.5"
+echo "PACKAGES: " $PACKAGES
+
+#
 # Commands
 #
 
 
 date > /etc/vagrant_provisioned_at
-
+export DEBIAN_FRONTEND=noninteractive
 apt-get update
-apt-get upgrade
-apt-get install python
-apt-get install python-dev
-apt-get install python-pip
-apt-get install libxml2-dev
-apt-get install libxslt1-dev
-apt-get install postgresql
-apt-get install postgresql-server-dev-9.5 
+apt-get upgrade -y
+apt-get install -y $PACKAGES
+pip install --upgrade pip
 pip install psycopg2
 pip install trytond
 
 useradd -r trytond
 su postgres -c "createuser -d trytond"
+su postgres -c "psql -c \"ALTER USER trytond WITH PASSWORD '$PSQLPASS';\""
 mkdir /var/run/trytond
 chown trytond.trytond /var/run/trytond
 mkdir /var/log/trytond
@@ -97,5 +109,5 @@ chown trytond.trytond /usr/local/etc/*
 
 echo "$SERV" > /etc/systemd/system/trytond.service
 systemctl start trytond.service
-
+systemctl enable trytond
 
