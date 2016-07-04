@@ -12,10 +12,11 @@ uri = postgresql://trytond:$PSQLPASS@localhost
 path = /usr/local/bin/trytond
 
 [web]
-listen = *:8080
+listen = *:8000
 
-[jsonrpc]
-listen = 0.0.0.0:8000
+[session]
+# Default password is adminsuper
+super_pwd = iCi2M7sA20NKk
 EOM
 
 #
